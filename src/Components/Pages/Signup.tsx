@@ -30,14 +30,15 @@ function SignUp() {
         );
       } else {
         setFinalPassword(passwordOne);
+        setFinalPassword(finalPassword);
 
         try {
-          const response = await axios.post("https://127.0.0.1:5000/signup", {
+          const response = await axios.post("http://127.0.0.1:5000/signup", {
             username: newUsername,
             password: finalPassword,
           });
 
-          setResponseText(JSON.stringify(response.data));
+          setResponseText(response.data.message);
         } catch (error) {
           if (axios.isAxiosError(error)) {
             setResponseText(error.message);
