@@ -14,8 +14,6 @@ conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserName-
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-with open(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\OneJson.json","r") as file:
-    j2 = json.load(file)
     
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -51,100 +49,76 @@ def signup():
     newPassword = newPassword.encode("utf-8")
     
     if validName == True and validPass == True:
-        q_get_name = """Select UserData.UserName From UserData"""
+        q_get_name = """SELECT COUNT (UserName) AS "Total" From UserData Where UserName = ?"""
         cu = conn.cursor()
-        cu.execute(q_get_name)
+        cu.execute(q_get_name,(newUsername,))
         conn.commit()
         userNameRepeat = cu.fetchall()
+        userNameRepeat2 = userNameRepeat[0][0]
+        print(userNameRepeat2)
+        if userNameRepeat2 > 0 :
+            message = "Invalid Sign-Up. Please try again someone is alsready using that username !!!"
+            print("This is the message___", message)
+            return jsonify({"message":message})
+        else:
+            salt = gensalt()
+            hashedPassword = hashpw(newPassword, salt)
+            q = """Insert Into UserData(UserName,Password) Values(?,?)"""
+            print("HERE_____:",newUsername, hashedPassword)
+            q_entry = (newUsername, hashedPassword)
+            cu.execute(q, q_entry)
+            conn.commit()
+            message = "Valid Sign-Up !!!"
+            print("This is the message___", message)
+            return jsonify({"message":message})
     else:
         message = "Invalid Sign-Up. Please try again !!!"
         print("This is the message___", message)
         return jsonify({"message":message})
     
-    if newUsername in userNameRepeat:
-        message = "Invalid Sign-Up. Please try again someone is alsready using that username !!!"
-        print("This is the message___", message)
-        return jsonify({"message":message})
-    else:
-         salt = gensalt()
-         hashedPassword = hashpw(newPassword, salt)
-         q = """Insert Into UserData(UserName,Password) Values(?,?)"""
-         q_entry = (newUsername, hashedPassword)
-         cu.execute(q, q_entry)
-         conn.commit()
-         message = "Valid Sign-Up !!!"
-         print("This is the message___", message)
-         return jsonify({"message":message})
-    
+
+#------------------------------------------------------------------
  
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
     password = data.get('password').encode("utf-8")
-    print("prints username____:",username)
-    print("prints password____:",password) 
+    #print("prints username____:",username)
+    #print("prints password____:",password) 
 
-    Final_q= check_credentials(username, password)
-    #print("Final q: " + Final_q)
-    data = queryOne(conn,Final_q)
-    if len(data) >= 1:
-        print("THIS IS THE DATA:___",data)
+    result = get_encryptedPass(conn, username, password)
+    
+    print("DATA__:",data)
+    if result:
         random_num = randrange(1, 3)
         q = "Select HolidayMessage.Message From HolidayMessage Where HolidayMessage.ID =" + str(random_num)
         cu = conn.cursor()
         cu.execute(q)
         conn.commit()
         message = cu.fetchall()
-        #print("THIS IS THE MESSAGE:___ ", message)
+        print("Message:",message)
+        return jsonify({"message":message})
     else:
         message = "Invalid Log In Please Try Again !!!"
+        return jsonify({"message":message})
     
-    return jsonify({"message":message})
     
 
 #--------------------------------------------------------------------------------------------------------
+def get_encryptedPass(conn, username, password):
+    
+    q = """Select UserData.Password From UserData Where Username = ? """
+    #print(username)
+    cu = conn.cursor()
+    cu.execute(q,(username,))
+    conn.commit()
+    passW = cu.fetchall()
     
 
-def check_credentials(username, password):
-    for el in j2:
-        q = ""
-        q = q+el
-        c = ""
-        for el2 in j2[el]["Columns"]:
-            for el3 in j2[el]["Columns"][el2]:
-                c+= el2 + "." + el3 +","
-            q += " " + c
-            q = q[:-1]
-            tb = ""
-            for t in j2[el]["Table"]:
-                tb += t + ","
-            tb = tb[:-1]
-        #print(tb)
-        q += " From " + tb
-        #print(q)
-        where = []
-        string = ""
-        for el4 in j2[el]["Where"]:
-            #print(el4)
-            for el5 in j2[el]["Where"][el4]:
-                #print(el5)
-                where.append(el5)
-        string1 = where[0]
-        string2 = where[1]
-        #print(string1)
-        strTwo = ""
-        strOne = ""   
-        strOne = string1[0]  + " = '" + username + "'"
-        strTwo = string2[0] + " = '" + password + "'"
-        str3 = strOne + " And " + strTwo
-        Final_q = q +" Where "+ str3
-
-        return Final_q
+    return  len(passW) > 0 and checkpw(password, passW[0][0])
+        
     
-
-
-
 
 def queryOne(conn, Final_q):
     cu = conn.cursor()
