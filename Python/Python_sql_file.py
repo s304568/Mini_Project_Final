@@ -22,8 +22,8 @@ def signup():
     data = request.json
     newUsername = data.get('username')
     newPassword = data.get("password")
-    print(newUsername)
-    print(newPassword)
+    print("Username sign-up: ",newUsername)
+    print("Password sign-up: ",newPassword)
     conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserName-PassWord.db",check_same_thread=False)
     cu = conn.cursor()
     validName = False 
@@ -32,8 +32,7 @@ def signup():
 
     resultName = re.match("^[a-zA-Z]+$", newUsername)
     resultPass = re.match("(?=.*[a-zA-Z])(?=.*\d)", newPassword)
-#elif resultPass:
- #       validPass = True
+
 
     if len(newUsername) >= 5 and len(newUsername) <= 16:
         validName = True
@@ -49,6 +48,8 @@ def signup():
     else:
         validPass = False
 
+    newPassword = newPassword.encode("utf-8")
+    
     if validName == True and validPass == True:
         q_get_name = """Select UserData.UserName From UserData"""
         cu = conn.cursor()
@@ -65,8 +66,10 @@ def signup():
         print("This is the message___", message)
         return jsonify({"message":message})
     else:
+         salt = gensalt()
+         hashedPassword = hashpw(newPassword, salt)
          q = """Insert Into UserData(UserName,Password) Values(?,?)"""
-         q_entry = (newUsername, newPassword)
+         q_entry = (newUsername, hashedPassword)
          cu.execute(q, q_entry)
          conn.commit()
          message = "Valid Sign-Up !!!"
@@ -78,7 +81,7 @@ def signup():
 def login():
     data = request.json
     username = data.get('username')
-    password = data.get('password')
+    password = data.get('password').encode("utf-8")
     print("prints username____:",username)
     print("prints password____:",password) 
 
@@ -98,41 +101,11 @@ def login():
         message = "Invalid Log In Please Try Again !!!"
     
     return jsonify({"message":message})
-    '''
-    if username in logins:
-        savedPassword = logins["username"]
-        providedPassword = request.json["password"].encode("utf-8")
-        if checkpw(providedPassword, savedPassword):
-            return "Valid Log in", 200 ,"\n", message
-        else:
-            return "Invalid Log In please try again" , 200
-    else:
-        salt = gensalt()
-        hashedPassword = hashpw(providedPassword, salt)
-        logins[username]
-        '''
-#(username, password) in data.items()
-
     
-'''def Response(username,password, conn, data):
-    if (username, password) in data.items():
-        print("THIS IS THE DATA:___",data)
-        random_num = randrange(1, 3)
-        q = "Select HolidayMessage.Message From HolidayMessage Where HolidayMessage.ID =" + str(random_num)
-        cu = conn.cursor()
-        cu.execute(q)
-        conn.commit()
-        message = cu.fetchall()
-        #print("THIS IS THE MESSAGE:___ ", message)
-    else:
-        message = "Invalid Log In Please Try Again !!!"
-    return message'''
-    
-       
-
 
 #--------------------------------------------------------------------------------------------------------
     
+
 def check_credentials(username, password):
     for el in j2:
         q = ""
