@@ -29,8 +29,6 @@ def signup():
     validName = False 
     validPass = False
 
-    q = """Insert Into UserData(UserName,Password) Values(?,?)"""
-    q_entry = (newUsername, newPassword)
 
     resultName = re.match("^[a-zA-Z]+$", newUsername)
     resultPass = re.match("(?=.*[a-zA-Z])(?=.*\d)", newPassword)
@@ -39,29 +37,43 @@ def signup():
 
     if len(newUsername) >= 5 and len(newUsername) <= 16:
         validName = True
-    elif resultPass:
-       validPass = True
+    elif resultName:
+       validName = True
     else: 
         validName = False
 
     if len(newPassword) >= 5 and len(newPassword) <= 16:
         validPass = True
+    elif resultPass:
+        validPass = True
     else:
         validPass = False
 
     if validName == True and validPass == True:
-        cu.execute(q, q_entry)
+        q_get_name = """Select UserData.UserName From UserData"""
+        cu = conn.cursor()
+        cu.execute(q_get_name)
         conn.commit()
-        message = "Valid Sign-Up !!!"
-        print("This is the message___", message)
-        return jsonify({"message":message})
+        userNameRepeat = cu.fetchall()
     else:
         message = "Invalid Sign-Up. Please try again !!!"
         print("This is the message___", message)
         return jsonify({"message":message})
     
-
-
+    if newUsername in userNameRepeat:
+        message = "Invalid Sign-Up. Please try again someone is alsready using that username !!!"
+        print("This is the message___", message)
+        return jsonify({"message":message})
+    else:
+         q = """Insert Into UserData(UserName,Password) Values(?,?)"""
+         q_entry = (newUsername, newPassword)
+         cu.execute(q, q_entry)
+         conn.commit()
+         message = "Valid Sign-Up !!!"
+         print("This is the message___", message)
+         return jsonify({"message":message})
+    
+ 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
