@@ -1,5 +1,6 @@
 import axios from "axios";
 import { FormEvent, useState } from "react";
+import "./Pages.css";
 
 function SignUp() {
   const [newUsername, setNewUsername] = useState("");

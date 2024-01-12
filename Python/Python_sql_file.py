@@ -9,7 +9,7 @@ from bcrypt import checkpw, gensalt, hashpw
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserName-PassWord.db",check_same_thread=False)
+conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserData.db",check_same_thread=False)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -22,7 +22,7 @@ def signup():
     newPassword = data.get("password")
     print("Username sign-up: ",newUsername)
     print("Password sign-up: ",newPassword)
-    conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserName-PassWord.db",check_same_thread=False)
+    conn = sqlite3.connect(r"G:\vb\ALEX_vb\React\Mini_Project_Final\Python\UserData.db",check_same_thread=False)
     cu = conn.cursor()
     validName = False 
     validPass = False
@@ -89,7 +89,7 @@ def login():
 
     result = get_encryptedPass(conn, username, password)
     
-    print("DATA__:",data)
+    print("DATA__:",data, "Result:",result)
     if result:
         random_num = randrange(1, 3)
         q = "Select HolidayMessage.Message From HolidayMessage Where HolidayMessage.ID =" + str(random_num)
@@ -119,18 +119,6 @@ def get_encryptedPass(conn, username, password):
     return  len(passW) > 0 and checkpw(password, passW[0][0])
         
     
-
-def queryOne(conn, Final_q):
-    cu = conn.cursor()
-    #self.cx = sqlite3.connect(file_path, check_same_thread=False)
-    cu.execute(Final_q)
-    conn.commit()
-    data = cu.fetchall()
-    
-    print("This is the data:", data)
-    return data
-
-
 
 if __name__ == "__main__":
     app.run()
